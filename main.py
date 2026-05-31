@@ -10,6 +10,7 @@ import datetime
 LibraryServerId = 465227088002154526
 FrontDeskChannelId = 1144367171212939404
 AlertsAndRolesChannelId = 599736045709557763
+LogsChannelId = 725045035044831243
 
 NotificationsMessageId = 599745222792183808
 PronounsMessageId = 1087090519731077241
@@ -71,6 +72,11 @@ async def on_member_join(member: discord.Member):
 	await front_desk_channel.send(f"<@{member.id}> joined! Welcome to the library! Please be sure to read the rules, and if you want to be notified when WhenWolvesCryOut uploads art or goes live on twitch, please check the <#{AlertsAndRolesChannelId}> channel. If you have any questions, please ask <@{SierraUserId}>, <@{MalUserId}>, or <@{FloUserId}>.") # type: ignore
 
 @client.event
+async def on_raw_member_remove(payload: discord.RawMemberRemoveEvent):
+	logs_channel = client.get_channel(LogsChannelId)
+	await logs_channel.send(f"<@{payload.user.id}> ({payload.user.name}) has left the server.") # type: ignore
+
+@client.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 	if payload.message_id == NotificationsMessageId:
 		if str(payload.emoji) == "1️⃣":
@@ -117,6 +123,51 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 	elif payload.message_id == RulesMessageId:
 		if str(payload.emoji) == "✅":
 			await payload.member.add_roles(discord.Object(VerifiedRoleId)) # type: ignore
+
+@client.event
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
+	if payload.message_id == NotificationsMessageId:
+		if str(payload.emoji) == "1️⃣":
+			await payload.member.remove_roles(discord.Object(AllArtRoleId)) # type: ignore
+		elif str(payload.emoji) == "2️⃣":
+			await payload.member.remove_roles(discord.Object(FinishedPiecesRoleId)) # type: ignore
+		elif str(payload.emoji) == "3️⃣":
+			await payload.member.remove_roles(discord.Object(TransformationArtRoleId)) # type: ignore
+		elif str(payload.emoji) == "4️⃣":
+			await payload.member.remove_roles(discord.Object(NonTransformationArtRoleId)) # type: ignore
+		elif str(payload.emoji) == "5️⃣":
+			await payload.member.remove_roles(discord.Object(SketchesRoleId)) # type: ignore
+		elif str(payload.emoji) == "6️⃣":
+			await payload.member.remove_roles(discord.Object(ComicsRoleId)) # type: ignore
+		elif str(payload.emoji) == "7️⃣":
+			await payload.member.remove_roles(discord.Object(WorksInProgressRoleId)) # type: ignore
+		elif str(payload.emoji) == "8️⃣":
+			await payload.member.remove_roles(discord.Object(AnimationsRoleId)) # type: ignore
+		elif str(payload.emoji) == "9️⃣":
+			await payload.member.remove_roles(discord.Object(LivestreamsRoleId)) # type: ignore
+		elif str(payload.emoji) == "🔟":
+			await payload.member.remove_roles(discord.Object(OneYearTillMidnightRoleId)) # type: ignore
+		elif str(payload.emoji) == "🔼":
+			await payload.member.remove_roles(discord.Object(MacroRoleId)) # type: ignore
+		elif str(payload.emoji) == "🔽":
+			await payload.member.remove_roles(discord.Object(NonMacroRoleId)) # type: ignore
+	elif payload.message_id == PronounsMessageId:
+		if str(payload.emoji) == "♂️":
+			await payload.member.remove_roles(discord.Object(HeHimRoleId)) # type: ignore
+		elif str(payload.emoji) == "♀️":
+			await payload.member.remove_roles(discord.Object(SheHerRoleId)) # type: ignore
+		elif str(payload.emoji) == "⚧️":
+			await payload.member.remove_roles(discord.Object(TheyThemRoleId)) # type: ignore
+	elif payload.message_id == CommissionMessageId:
+		if str(payload.emoji) == "🖌️":
+			await payload.member.remove_roles(discord.Object(CommissionsRoleId)) # type: ignore
+		elif str(payload.emoji) == "✏️":
+			await payload.member.remove_roles(discord.Object(DonoDoodlesRoleId)) # type: ignore
+	elif payload.message_id == EventMessageId:
+		if str(payload.emoji) == "🗣️":
+			await payload.member.remove_roles(discord.Object(VrChatRoleId)) # type: ignore
+		elif str(payload.emoji) == "📦":
+			await payload.member.remove_roles(discord.Object(JackboxRoleId)) # type: ignore
 
 # this code will be executed upon running this file
 # this weird if statement is just a python convention; it makes sure code doesn't get executed at the wrong time
