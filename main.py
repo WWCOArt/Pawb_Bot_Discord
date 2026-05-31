@@ -15,6 +15,7 @@ NotificationsMessageId = 599745222792183808
 PronounsMessageId = 1087090519731077241
 CommissionMessageId = 1121794581646803015
 EventMessageId = 1121885276793491536
+RulesMessageId = 465766450691440645
 
 SierraUserId = 175264618644635648
 MalUserId = 179394925685637120
@@ -39,6 +40,7 @@ CommissionsRoleId = 1121793404637040720
 DonoDoodlesRoleId = 1121792988092313690
 VrChatRoleId = 1096409375825989682
 JackboxRoleId = 1096409490645069934
+VerifiedRoleId = 1145359302656278599
 
 TokenFile = "token.txt"
 
@@ -112,6 +114,9 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 			await payload.member.add_roles(discord.Object(VrChatRoleId)) # type: ignore
 		elif str(payload.emoji) == "📦":
 			await payload.member.add_roles(discord.Object(JackboxRoleId)) # type: ignore
+	elif payload.message_id == RulesMessageId:
+		if str(payload.emoji) == "✅":
+			await payload.member.add_roles(discord.Object(VerifiedRoleId)) # type: ignore
 
 # this code will be executed upon running this file
 # this weird if statement is just a python convention; it makes sure code doesn't get executed at the wrong time
