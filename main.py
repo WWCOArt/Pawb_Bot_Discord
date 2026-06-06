@@ -2,8 +2,6 @@ import discord
 from discord import app_commands
 from discord.ext import tasks
 
-import datetime
-
 ####################################################################################################
 
 # to get these, make sure discord developer mode is enabled, and then just right click on a user or channel to copy the id
@@ -62,6 +60,10 @@ class PawbBotClient(discord.Client):
 
 		super().__init__(intents=intents)
 
+	async def setup_hook(self) -> None:
+		self.check_stream_announcements.start()
+		return await super().setup_hook()
+
 	# see https://discordpy.readthedocs.io/en/stable/api.html?highlight=on_ready#event-reference for a list of all events
 
 	async def on_ready(self):
@@ -83,7 +85,7 @@ class PawbBotClient(discord.Client):
 		if message.author.id == self.user.id: # type: ignore
 			return
 
-		# when a 
+		# when a message is put into the stream announcements channel, add it to the tracking list
 		if message.channel.id == StreamAnnouncementsChannelId:
 			self.stream_announcements.append(StreamAnnouncement(message.id))
 
@@ -183,15 +185,16 @@ class PawbBotClient(discord.Client):
 	# and delete them if they reach 24 hours
 	@tasks.loop(hours=1)
 	async def check_stream_announcements(self):
-		channel = await self.fetch_channel(StreamAnnouncementsChannelId)
-		for message in self.stream_announcements:
-			message.hours_existed += 1
-			if message.hours_existed >= 24:
-				# delete the message from the channel
-				channel.delete_messages([discord.Object(message.message_id)]) # type: ignore
+		if len(self.stream_announcements) > 0:
+			channel = await self.fetch_channel(StreamAnnouncementsChannelId)
+			for message in self.stream_announcements:
+				message.hours_existed += 1
+				if message.hours_existed >= 24:
+					# delete the message from the channel
+					await channel.delete_messages([discord.Object(message.message_id)]) # type: ignore
 
-		# delete the messages from our list
-		self.stream_announcements = list(filter((lambda msg: msg.hours_existed < 24), self.stream_announcements))
+			# delete the messages from our list
+			self.stream_announcements = list(filter((lambda msg: msg.hours_existed < 24), self.stream_announcements))
 
 
 # this code will be executed upon running this file
