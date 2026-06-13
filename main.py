@@ -182,19 +182,20 @@ class PawbBotClient(discord.Client):
 
 	# this runs this function every hour;
 	# every hour, we add 1 to the number of hours each stream announcement has existed
-	# and delete them if they reach 24 hours
+	# and delete them if they reach 12 hours
 	@tasks.loop(hours=1)
 	async def check_stream_announcements(self):
+		hour_cutoff = 12
 		if len(self.stream_announcements) > 0:
 			channel = await self.fetch_channel(StreamAnnouncementsChannelId)
 			for message in self.stream_announcements:
 				message.hours_existed += 1
-				if message.hours_existed >= 24:
+				if message.hours_existed >= hour_cutoff:
 					# delete the message from the channel
 					await channel.delete_messages([discord.Object(message.message_id)]) # type: ignore
 
 			# delete the messages from our list
-			self.stream_announcements = list(filter((lambda msg: msg.hours_existed < 24), self.stream_announcements))
+			self.stream_announcements = list(filter((lambda msg: msg.hours_existed < hour_cutoff), self.stream_announcements))
 
 
 # this code will be executed upon running this file
