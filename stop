@@ -1,0 +1,4 @@
+#!/bin/bash
+
+screen -x pawbbot -X stuff $'\003'
+screen -x pawbbot -X quit

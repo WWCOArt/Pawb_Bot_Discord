@@ -2,6 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import tasks
 
+import datetime
+
 ####################################################################################################
 
 # to get these, make sure discord developer mode is enabled, and then just right click on a user or channel to copy the id
@@ -46,18 +48,9 @@ TokenFile = "token.txt"
 
 ####################################################################################################
 
-class StreamAnnouncement:
-	def __init__(self, message_id: int):
-		self.message_id = message_id
-		self.hours_existed = 0
-
-####################################################################################################
-
 class PawbBotClient(discord.Client):
 	# set up variables
 	def __init__(self, intents: discord.Intents):
-		self.stream_announcements: list[StreamAnnouncement] = []
-
 		super().__init__(intents=intents)
 
 	async def setup_hook(self) -> None:
@@ -79,15 +72,6 @@ class PawbBotClient(discord.Client):
 	async def on_raw_member_remove(self, payload: discord.RawMemberRemoveEvent):
 		logs_channel = await self.fetch_channel(LogsChannelId)
 		await logs_channel.send(f"<@{payload.user.id}> ({payload.user.name}) has left the server.") # type: ignore
-
-	async def on_message(self, message: discord.Message):
-		# don't try to do things in reaction to the bot's messages
-		if message.author.id == self.user.id: # type: ignore
-			return
-
-		# when a message is put into the stream announcements channel, add it to the tracking list
-		if message.channel.id == StreamAnnouncementsChannelId:
-			self.stream_announcements.append(StreamAnnouncement(message.id))
 
 	async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
 		if payload.message_id == NotificationsMessageId:
@@ -186,16 +170,13 @@ class PawbBotClient(discord.Client):
 	@tasks.loop(hours=1)
 	async def check_stream_announcements(self):
 		hour_cutoff = 12
-		if len(self.stream_announcements) > 0:
-			channel = await self.fetch_channel(StreamAnnouncementsChannelId)
-			for message in self.stream_announcements:
-				message.hours_existed += 1
-				if message.hours_existed >= hour_cutoff:
-					# delete the message from the channel
-					await channel.delete_messages([discord.Object(message.message_id)]) # type: ignore
-
-			# delete the messages from our list
-			self.stream_announcements = list(filter((lambda msg: msg.hours_existed < hour_cutoff), self.stream_announcements))
+		channel = await self.fetch_channel(StreamAnnouncementsChannelId)
+		async for message in channel.history(limit=50): # type: ignore
+			created_time = message.created_at
+			current_time = datetime.datetime.now(tz=created_time.tzinfo)
+			hours_existed = (current_time - created_time).total_seconds() // 3600
+			if hours_existed >= hour_cutoff:
+				await channel.delete_messages([discord.Object(message.message_id)]) # type: ignore
 
 
 # this code will be executed upon running this file
