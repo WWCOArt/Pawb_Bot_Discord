@@ -176,7 +176,7 @@ class PawbBotClient(discord.Client):
 			current_time = datetime.datetime.now(tz=created_time.tzinfo)
 			hours_existed = (current_time - created_time).total_seconds() // 3600
 			if hours_existed >= hour_cutoff:
-				await channel.delete_messages([discord.Object(message.message_id)]) # type: ignore
+				await channel.delete_messages([discord.Object(message.id)]) # type: ignore
 
 
 # this code will be executed upon running this file
